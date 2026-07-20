@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     app_name: str = "NASA Mission Intelligence"
     app_version: str = "0.1.0"
     debug: bool = False
+    google_api_key: str = ""
 
 
 settings = Settings()
