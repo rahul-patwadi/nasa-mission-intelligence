@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 
+from app.api.routes import missions, query
 from app.core.config import settings
 
 app = FastAPI(
@@ -13,6 +14,9 @@ app = FastAPI(
         "document repositories using RAG."
     ),
 )
+
+app.include_router(query.router)
+app.include_router(missions.router)
 
 
 @app.get("/health")

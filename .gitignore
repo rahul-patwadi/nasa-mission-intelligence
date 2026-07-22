@@ -219,3 +219,6 @@ __marimo__/
 
 # Chroma persistent store
 /data/chroma/
+
+# Claude Code personal overrides (project settings.json is checked in)
+.claude/settings.local.json
