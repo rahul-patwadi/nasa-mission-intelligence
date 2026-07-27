@@ -10,7 +10,7 @@ from app.core.config import settings
 from app.core.embeddings import embed_chunks
 from app.core.vectorstore import query as vectorstore_query
 
-GENERATION_MODEL = "gemini-2.5-flash"
+GENERATION_MODEL = "gemini-flash-latest"
 TOP_K = 5
 NO_INFO_ANSWER = "I don't have information on that."
 

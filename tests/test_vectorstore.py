@@ -1,18 +1,21 @@
 """Tests for the ChromaDB vector store wrapper."""
 
+import uuid
 from typing import Any
 
 import chromadb
 import pytest
 from chromadb import Collection
 
-from app.core.vectorstore import query, upsert_chunks
+from app.core.vectorstore import existing_record_ids, query, upsert_chunks
 
 
 @pytest.fixture
 def collection() -> Collection:
+    # A unique name per test: chromadb's EphemeralClient shares collection
+    # state across instances within the same process when names collide.
     client = chromadb.EphemeralClient()
-    return client.get_or_create_collection("test_collection")
+    return client.get_or_create_collection(f"test_collection_{uuid.uuid4().hex}")
 
 
 def _chunk(
@@ -50,3 +53,16 @@ def test_query_mission_filter_excludes_other_missions(collection: Collection) ->
 
     assert len(results) == 1
     assert results[0]["mission"] == "Mars"
+
+
+def test_existing_record_ids_empty_for_empty_collection(collection: Collection) -> None:
+    assert existing_record_ids(collection=collection) == set()
+
+
+def test_existing_record_ids_returns_distinct_record_ids(collection: Collection) -> None:
+    chunk_a = _chunk("First chunk of record 1.", 1, "Apollo", 0, [1.0, 0.0])
+    chunk_b = _chunk("Second chunk of record 1.", 1, "Apollo", 1, [1.0, 0.1])
+    other_record = _chunk("Record 2.", 2, "Mars", 0, [0.0, 1.0])
+    upsert_chunks([chunk_a, chunk_b, other_record], collection=collection)
+
+    assert existing_record_ids(collection=collection) == {1, 2}

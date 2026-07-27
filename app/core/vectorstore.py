@@ -21,6 +21,14 @@ def _get_collection() -> Collection:
     return _client.get_or_create_collection(COLLECTION_NAME)
 
 
+def existing_record_ids(collection: Collection | None = None) -> set[Any]:
+    """The distinct record_ids that already have chunks stored in the vector store."""
+    collection = collection if collection is not None else _get_collection()
+    result = collection.get(include=cast(Any, ["metadatas"]))
+    metadatas = result["metadatas"] or []
+    return {metadata["record_id"] for metadata in metadatas}
+
+
 def upsert_chunks(chunks: list[dict[str, Any]], collection: Collection | None = None) -> None:
     """Store each chunk's text, embedding, and metadata (record_id, mission, chunk_index)."""
     collection = collection if collection is not None else _get_collection()

@@ -19,6 +19,10 @@ PAGE_SIZE = 100  # API maximum
 MAX_RECORDS_PER_QUERY = 10_000  # API hard cap
 _MAX_RETRIES = 4
 
+# httpx's 5s default timeout is too tight for this API, which we've observed
+# take 2-3s per page; use a more generous timeout for both search and PDF downloads.
+DEFAULT_TIMEOUT = httpx.Timeout(30.0)
+
 
 class NTRSClient:
     """Thin async wrapper over the NTRS citations search endpoint."""
@@ -28,7 +32,13 @@ class NTRSClient:
 
     async def _get(self, path: str, params: dict[str, Any]) -> dict[str, Any]:
         for attempt in range(_MAX_RETRIES):
-            resp = await self._client.get(f"{BASE_URL}{path}", params=params)
+            try:
+                resp = await self._client.get(f"{BASE_URL}{path}", params=params)
+            except httpx.TransportError:
+                if attempt == _MAX_RETRIES - 1:
+                    raise
+                await asyncio.sleep(2**attempt)
+                continue
             if resp.status_code == 429 or resp.status_code >= 500:
                 await asyncio.sleep(_retry_after(resp) or 2**attempt)
                 continue
@@ -46,24 +56,28 @@ class NTRSClient:
             "distribution": "PUBLIC",
             "page.size": PAGE_SIZE,
             "from": offset,
-            "sort.field": "id",
-            "sort.order": "asc",
+            "sort.field": "score",
+            "sort.order": "desc",
         }
         data = await self._get("/citations/search", params)
         results: list[dict[str, Any]] = data.get("results", [])
         return results
 
-    async def search(self, query: str) -> list[dict[str, Any]]:
-        """Every PUBLIC, document-bearing record for one mission keyword."""
+    async def search(self, query: str, limit: int | None = None) -> list[dict[str, Any]]:
+        """Up to `limit` PUBLIC, document-bearing records for one keyword, most
+        relevant first. Fetches every matching record if `limit` is None."""
+        max_records = (
+            min(limit, MAX_RECORDS_PER_QUERY) if limit is not None else MAX_RECORDS_PER_QUERY
+        )
         out: list[dict[str, Any]] = []
         offset = 0
-        while offset < MAX_RECORDS_PER_QUERY:
+        while offset < max_records:
             page = await self._search_page(query, offset)
             if not page:
                 break
             out.extend(page)
             offset += PAGE_SIZE
-        return out
+        return out[:limit] if limit is not None else out
 
 
 def _retry_after(resp: httpx.Response) -> float | None:

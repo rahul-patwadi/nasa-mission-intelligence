@@ -22,9 +22,11 @@ The prompt sent to the model explicitly restricts it to the retrieved context an
 
 Each retrieved chunk is numbered in the prompt (`[source 1]`, `[source 2]`, ...) alongside its mission and record id, and the model is instructed to cite which source(s) it used. `sources` in the response is always the full list of retrieved chunks' `{record_id, mission, chunk_index}` — it is not filtered down to only the chunks the model actually cited in its answer text. Callers that want to display "sources actually used" need to parse the `[source N]` markers out of `answer` themselves.
 
-### Generation model: `gemini-2.5-flash` via `google-genai`
+### Generation model: `gemini-flash-latest` via `google-genai`
 
-`gemini-2.5-flash` is used for cost/latency reasons — this is a portfolio project, not a latency- or reasoning-insensitive workload that would justify a larger model. As with `embeddings.py` (ADR 0003), the client is `google-genai`, not the end-of-life `google-generativeai`, for the same reason: no new code should be built against a dead SDK.
+A flash-tier model is used for cost/latency reasons — this is a portfolio project, not a latency- or reasoning-insensitive workload that would justify a larger model. As with `embeddings.py` (ADR 0003), the client is `google-genai`, not the end-of-life `google-generativeai`, for the same reason: no new code should be built against a dead SDK.
+
+**2026-07-23 correction:** the model originally specified here, `gemini-2.5-flash`, is listed by `client.models.list()` but returns 404 ("no longer available to new users") when called — a pinned version can go stale even while still appearing in the catalog. Swapped to `gemini-flash-latest`, Google's maintained alias that always resolves to the current stable flash model, to avoid re-hitting this failure mode as models rotate. Trade-off: behavior can shift silently on Google's release schedule since the alias isn't a fixed version — acceptable here since answers aren't required to be reproducible across time for this project.
 
 ## Consequences
 

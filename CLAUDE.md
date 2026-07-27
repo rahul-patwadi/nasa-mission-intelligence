@@ -44,7 +44,10 @@ frontend/         # Angular (later)
   Reason: corpus is mission-scoped, fits under the 10k-records/query cap, and
   avoids downloading + filtering the entire repository.
 - Scope = six missions (Apollo, Artemis, ISS, Mars, Hubble, Voyager),
-  config-driven so more can be added. Query each keyword, dedup by record `id`.
+  config-driven so more can be added. Query each keyword, sorted by relevance
+  (`sort.field=score`, `sort.order=desc`), capped at `RECORDS_PER_MISSION = 300`
+  per mission, dedup by record `id` (see ADR 0005 — an exhaustive id-sorted
+  fetch was too slow: thousands of loosely-relevant hits per mission keyword).
 - Pre-filter at the source with `disseminated=DOCUMENT_AND_METADATA` +
   `distribution=PUBLIC` so we only pull records that actually have a document.
 
