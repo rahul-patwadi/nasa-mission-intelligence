@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = False
     google_api_key: str = ""
+    cors_origins: str = "http://localhost:4200"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Parse the comma-separated cors_origins setting into a list."""
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 settings = Settings()

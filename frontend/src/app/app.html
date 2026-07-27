@@ -1,0 +1,66 @@
+<div class="page">
+  <header class="header">
+    <h1>NASA Mission Intelligence</h1>
+    <label class="mission-filter">
+      Mission
+      <select [(ngModel)]="selectedMission" name="mission">
+        @for (mission of missionOptions(); track mission) {
+          <option [value]="mission">{{ mission }}</option>
+        }
+      </select>
+    </label>
+  </header>
+
+  <main class="message-list" #messageList>
+    @if (messages().length === 0) {
+      <p class="empty-state">Ask a question about NASA mission reports to get started.</p>
+    }
+
+    @for (message of messages(); track $index) {
+      <div class="bubble-row" [class.bubble-row--user]="message.role === 'user'">
+        <div class="bubble" [class.bubble--user]="message.role === 'user'" [class.bubble--assistant]="message.role === 'assistant'">
+          <p class="bubble-text">{{ message.text }}</p>
+
+          @if (message.sources && message.sources.length > 0) {
+            <div class="sources">
+              <span class="sources-label">Sources</span>
+              <ul class="sources-list">
+                @for (source of message.sources; track source.record_id + '-' + source.chunk_index) {
+                  <li>#{{ source.record_id }} &middot; {{ source.mission }}</li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="bubble-row">
+        <div class="bubble bubble--assistant bubble--loading">
+          <span class="loading-dot"></span>
+          <span class="loading-dot"></span>
+          <span class="loading-dot"></span>
+        </div>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="error-banner">{{ error() }}</div>
+    }
+  </main>
+
+  <footer class="composer">
+    <textarea
+      class="composer-input"
+      placeholder="Ask about a NASA mission..."
+      [(ngModel)]="questionInput"
+      name="question"
+      rows="1"
+      (keydown)="onInputKeydown($event)"
+    ></textarea>
+    <button class="send-button" type="button" (click)="send()" [disabled]="loading() || !questionInput().trim()">
+      Send
+    </button>
+  </footer>
+</div>

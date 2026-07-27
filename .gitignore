@@ -222,3 +222,4 @@ __marimo__/
 
 # Claude Code personal overrides (project settings.json is checked in)
 .claude/settings.local.json
+.DS_Store
