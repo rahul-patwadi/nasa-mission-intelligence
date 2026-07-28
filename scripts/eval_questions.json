@@ -1,0 +1,270 @@
+[
+  {
+    "id": "apollo-objectives",
+    "question": "What were the primary objectives of the Apollo 11 lunar landing mission?",
+    "mission_filter": null,
+    "expected_mission": "Apollo",
+    "expected_keywords": [
+      "lunar landing",
+      "objective",
+      "Apollo 11"
+    ],
+    "note": "Should surface mission-objective / landing-summary content specific to Apollo 11, not general Apollo program history.",
+    "labels": {
+      "19760005580-83": false,
+      "20010008244-430": false,
+      "20010008244-436": true,
+      "20010008244-963": true,
+      "20010008244-355": false
+    }
+  },
+  {
+    "id": "apollo-lunar-module",
+    "question": "How did the Apollo lunar module perform its descent to the lunar surface?",
+    "mission_filter": "Apollo",
+    "expected_mission": "Apollo",
+    "expected_keywords": [
+      "lunar module",
+      "descent",
+      "landing"
+    ],
+    "note": "Should surface technical descent/landing-sequence content, not launch-vehicle or command-module material.",
+    "labels": {
+      "19670007177-26": true,
+      "19760005580-39": false,
+      "19660006559-9": true,
+      "19660006559-6": true,
+      "19760005580-1405": false
+    }
+  },
+  {
+    "id": "artemis-goals",
+    "question": "What are the goals of the Artemis program for returning astronauts to the Moon?",
+    "mission_filter": null,
+    "expected_mission": "Artemis",
+    "expected_keywords": [
+      "Artemis",
+      "Moon",
+      "astronaut"
+    ],
+    "note": "Should surface Artemis program-overview or mission-goal content, not unrelated historical Apollo material.",
+    "labels": {
+      "20220000524-6": true,
+      "20205005150-2": true,
+      "20210025649-4": true,
+      "20210026673-1": true,
+      "20230000983-1": true
+    }
+  },
+  {
+    "id": "artemis-orion",
+    "question": "What role does the Orion spacecraft play in the Artemis missions?",
+    "mission_filter": "Artemis",
+    "expected_mission": "Artemis",
+    "expected_keywords": [
+      "Orion",
+      "spacecraft",
+      "crew"
+    ],
+    "note": "Should surface content describing Orion's function (crew vehicle, transit to lunar orbit), not SLS launch-vehicle-only content.",
+    "labels": {
+      "20230001115-5": true,
+      "20260004453-580": true,
+      "20205005150-6": true,
+      "20240009183-26": true,
+      "20240007738-6": true
+    }
+  },
+  {
+    "id": "iss-life-support",
+    "question": "How does the International Space Station's life support system regulate air and water?",
+    "mission_filter": "ISS",
+    "expected_mission": "ISS",
+    "expected_keywords": [
+      "life support",
+      "ISS",
+      "air",
+      "water"
+    ],
+    "note": "Should surface ECLSS (Environmental Control and Life Support System) technical content, not general ISS history.",
+    "labels": {
+      "20140002687-8": true,
+      "20230006217-4": true,
+      "20160009710-4": true,
+      "20230006217-7": true,
+      "20170008984-0": true
+    }
+  },
+  {
+    "id": "iss-microgravity-research",
+    "question": "What kinds of scientific research are conducted aboard the ISS in microgravity?",
+    "mission_filter": "ISS",
+    "expected_mission": "ISS",
+    "expected_keywords": [
+      "microgravity",
+      "research",
+      "experiment"
+    ],
+    "note": "Should surface content about experiments/research programs conducted on ISS, not station construction/assembly history.",
+    "labels": {
+      "20230005232-398": true,
+      "20190027278-11": true,
+      "20190027278-6": true,
+      "20230005232-2": false,
+      "20230005232-432": false
+    }
+  },
+  {
+    "id": "mars-rover-instruments",
+    "question": "What instruments do Mars rovers use to analyze soil and rock samples?",
+    "mission_filter": "Mars",
+    "expected_mission": "Mars",
+    "expected_keywords": [
+      "rover",
+      "instrument",
+      "sample",
+      "soil"
+    ],
+    "note": "Should surface rover instrumentation/science-payload content, not mission-planning or launch content.",
+    "labels": {
+      "20230001230-92": false,
+      "20250009654-19": true,
+      "20030066617-17": true,
+      "20030066617-0": true,
+      "20030066617-1": false
+    }
+  },
+  {
+    "id": "mars-atmosphere",
+    "question": "What is known about the composition of the Martian atmosphere?",
+    "mission_filter": "Mars",
+    "expected_mission": "Mars",
+    "expected_keywords": [
+      "atmosphere",
+      "Mars",
+      "carbon dioxide"
+    ],
+    "note": "Should surface atmospheric-composition/science content, not rover-engineering content.",
+    "labels": {
+      "19670030539-318": false,
+      "19670030539-264": false,
+      "19670030539-78": true,
+      "19670030539-179": false,
+      "19870008289-717": true
+    }
+  },
+  {
+    "id": "hubble-servicing",
+    "question": "What repairs were made during the Hubble Space Telescope servicing missions?",
+    "mission_filter": "Hubble",
+    "expected_mission": "Hubble",
+    "expected_keywords": [
+      "servicing",
+      "repair",
+      "Hubble"
+    ],
+    "note": "Should surface content about the shuttle servicing missions and specific instrument/hardware repairs, not general astronomy findings from Hubble.",
+    "labels": {
+      "20250004992-11": true,
+      "20250004992-15": true,
+      "20050147480-5": false,
+      "20050147480-6": true,
+      "20060020063-17": false
+    }
+  },
+  {
+    "id": "hubble-optics",
+    "question": "What optical design does the Hubble Space Telescope use to capture images?",
+    "mission_filter": "Hubble",
+    "expected_mission": "Hubble",
+    "expected_keywords": [
+      "optical",
+      "mirror",
+      "telescope"
+    ],
+    "note": "Should surface content about Hubble's mirror/optical-system design, not mission-operations logistics.",
+    "labels": {
+      "19910008526-143": true,
+      "20250004992-5": true,
+      "19920021442-14": false,
+      "19910008526-58": true,
+      "19910008526-142": true
+    }
+  },
+  {
+    "id": "voyager-golden-record",
+    "question": "What is the Voyager Golden Record and what does it contain?",
+    "mission_filter": "Voyager",
+    "expected_mission": "Voyager",
+    "expected_keywords": [
+      "Golden Record",
+      "Voyager"
+    ],
+    "note": "Should surface content specifically about the Golden Record artifact, not general Voyager trajectory/engineering content.",
+    "labels": {
+      "19910073731-317": true,
+      "19910073731-316": false,
+      "19910073731-318": true,
+      "19790008720-1": false,
+      "19910073731-349": false
+    }
+  },
+  {
+    "id": "voyager-interstellar",
+    "question": "When did the Voyager probes enter interstellar space and how was that determined?",
+    "mission_filter": "Voyager",
+    "expected_mission": "Voyager",
+    "expected_keywords": [
+      "interstellar",
+      "heliopause",
+      "Voyager"
+    ],
+    "note": "Should surface content about the interstellar-transition detection (e.g. plasma density measurements), not launch history.",
+    "labels": {
+      "19910073731-314": false,
+      "19910073731-247": false,
+      "19920003915-0": false,
+      "19910073731-310": true,
+      "19790008720-104": false
+    }
+  },
+  {
+    "id": "cross-mission-power",
+    "question": "How do NASA spacecraft generate electrical power for long-duration missions far from the Sun?",
+    "mission_filter": null,
+    "expected_mission": null,
+    "expected_keywords": [
+      "power",
+      "generator",
+      "solar",
+      "radioisotope"
+    ],
+    "note": "Cross-mission question (likely Voyager/Mars RTG content, possibly ISS solar-array content) \u2014 no single expected mission; judge relevance by whether the chunk actually discusses spacecraft power generation.",
+    "labels": {
+      "19790008720-38": false,
+      "19810001583-41": true,
+      "19810023559-36": true,
+      "19670031116-1022": true,
+      "19790008720-7": true
+    }
+  },
+  {
+    "id": "cross-mission-radiation",
+    "question": "How do NASA missions protect astronauts or electronics from space radiation?",
+    "mission_filter": null,
+    "expected_mission": null,
+    "expected_keywords": [
+      "radiation",
+      "shielding",
+      "protection"
+    ],
+    "note": "Cross-mission question (could be ISS crew radiation content or Mars/Voyager electronics-shielding content) \u2014 judge relevance by actual topical match, not mission.",
+    "labels": {
+      "20170001943-341": true,
+      "20180006508-343": true,
+      "20210009936-878": true,
+      "20170001943-338": true,
+      "20180006508-340": true
+    }
+  }
+]
