@@ -1,10 +1,13 @@
 """Tests for PDF text extraction."""
 
+import asyncio
 import io
 
 import httpx
+import pytest
 from reportlab.pdfgen import canvas
 
+import app.fetcher.extractor as extractor
 from app.fetcher.extractor import extract_text
 
 
@@ -42,5 +45,23 @@ async def test_extract_text_returns_none_for_corrupt_pdf() -> None:
 async def test_extract_text_returns_none_on_download_failure() -> None:
     async with _client_returning(b"", status_code=404) as client:
         result = await extract_text("https://example.com/missing.pdf", client)
+
+    assert result is None
+
+
+async def test_extract_text_returns_none_when_download_stalls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A connection that never times out per-chunk (e.g. a slow trickle) must
+    # still be bounded by a hard wall-clock ceiling, not hang forever.
+    monkeypatch.setattr(extractor, "_DOWNLOAD_WALL_CLOCK_TIMEOUT", 0.05)
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        await asyncio.sleep(1)
+        return httpx.Response(200, content=b"never reached")
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    async with client:
+        result = await extract_text("https://example.com/stalled.pdf", client)
 
     assert result is None
