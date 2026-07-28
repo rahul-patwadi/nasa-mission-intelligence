@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from google import genai
+from google.genai import types
 
 from app.core.config import settings
 from app.core.embeddings import embed_chunks
@@ -13,6 +14,10 @@ from app.core.vectorstore import query as vectorstore_query
 GENERATION_MODEL = "gemini-flash-latest"
 TOP_K = 5
 NO_INFO_ANSWER = "I don't have information on that."
+
+# genai.Client has no timeout by default, so a stalled connection can hang
+# indefinitely; bound every request explicitly (see embeddings.py).
+_REQUEST_TIMEOUT_MS = 60_000
 
 _SYSTEM_PROMPT = (
     "You are a mission-intelligence assistant. Answer the question using ONLY "
@@ -39,7 +44,10 @@ async def answer_query(question: str, mission_filter: str | None = None) -> dict
     )
     prompt = f"{_SYSTEM_PROMPT}\n\nContext:\n{context}\n\nQuestion: {question}"
 
-    client = genai.Client(api_key=settings.google_api_key)
+    client = genai.Client(
+        api_key=settings.google_api_key,
+        http_options=types.HttpOptions(timeout=_REQUEST_TIMEOUT_MS),
+    )
     response = await client.aio.models.generate_content(model=GENERATION_MODEL, contents=prompt)
 
     return {
