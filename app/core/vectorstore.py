@@ -11,6 +11,11 @@ from chromadb.api import ClientAPI
 PERSIST_DIRECTORY = "./data/chroma"
 COLLECTION_NAME = "nasa_missions"
 
+# collection.get() with no limit tries to bind every row's columns as SQL
+# variables in one query, which blows past SQLite's bound-variable limit on
+# a large collection ("too many SQL variables"). Page it.
+_GET_PAGE_SIZE = 500
+
 _client: ClientAPI | None = None
 
 
@@ -24,9 +29,16 @@ def _get_collection() -> Collection:
 def existing_record_ids(collection: Collection | None = None) -> set[Any]:
     """The distinct record_ids that already have chunks stored in the vector store."""
     collection = collection if collection is not None else _get_collection()
-    result = collection.get(include=cast(Any, ["metadatas"]))
-    metadatas = result["metadatas"] or []
-    return {metadata["record_id"] for metadata in metadatas}
+    record_ids: set[Any] = set()
+    offset = 0
+    while True:
+        page = collection.get(include=cast(Any, ["metadatas"]), limit=_GET_PAGE_SIZE, offset=offset)
+        metadatas = page["metadatas"] or []
+        if not metadatas:
+            break
+        record_ids.update(metadata["record_id"] for metadata in metadatas)
+        offset += _GET_PAGE_SIZE
+    return record_ids
 
 
 def upsert_chunks(chunks: list[dict[str, Any]], collection: Collection | None = None) -> None:

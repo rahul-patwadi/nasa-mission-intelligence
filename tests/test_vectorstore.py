@@ -7,6 +7,7 @@ import chromadb
 import pytest
 from chromadb import Collection
 
+import app.core.vectorstore as vectorstore
 from app.core.vectorstore import existing_record_ids, query, upsert_chunks
 
 
@@ -66,3 +67,19 @@ def test_existing_record_ids_returns_distinct_record_ids(collection: Collection)
     upsert_chunks([chunk_a, chunk_b, other_record], collection=collection)
 
     assert existing_record_ids(collection=collection) == {1, 2}
+
+
+def test_existing_record_ids_paginates_across_multiple_pages(
+    collection: Collection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Force a page size smaller than the number of stored chunks, so this
+    # only passes if the underlying get() loop actually paginates rather
+    # than assuming everything fits in one page.
+    monkeypatch.setattr(vectorstore, "_GET_PAGE_SIZE", 1)
+    chunks = [
+        _chunk(f"chunk {i}", record_id=i, mission="Apollo", chunk_index=0, embedding=[1.0, 0.0])
+        for i in range(5)
+    ]
+    upsert_chunks(chunks, collection=collection)
+
+    assert existing_record_ids(collection=collection) == {0, 1, 2, 3, 4}
