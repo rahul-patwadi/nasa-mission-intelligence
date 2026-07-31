@@ -59,3 +59,5 @@ frontend/         # Angular (later)
 - TODO: confirm search param shape (query-string vs POST body) against the
   live endpoint.
 - Every architectural decision gets a new ADR.
+
+Current status: backend done + populated, frontend works end-to-end, ADR 0006 rolled out — corpus re-embedded at 768 dims (normalized), data/chroma 1.5GB -> 742MB, precision@5 0.67 -> 0.70 (no regression). Next step: hand-label the 13 NEEDS LABEL chunks scaffolded in scripts/eval_questions.json by the 768-dim eval run.

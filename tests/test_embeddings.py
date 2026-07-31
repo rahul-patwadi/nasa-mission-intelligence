@@ -1,12 +1,13 @@
 """Tests for embedding generation, rate limiting, and 429 retry handling."""
 
+import math
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from google.genai import errors
 
-from app.core.embeddings import _RateLimiter, _retry_delay_seconds, embed_chunks
+from app.core.embeddings import _normalize, _RateLimiter, _retry_delay_seconds, embed_chunks
 
 
 def _embed_response(vectors: list[list[float]]) -> MagicMock:
@@ -36,8 +37,9 @@ async def test_embed_chunks_adds_embedding_key(monkeypatch: pytest.MonkeyPatch) 
     chunks = [{"text": "a"}, {"text": "b"}]
     result = await embed_chunks(chunks)
 
-    assert result[0]["embedding"] == [0.1, 0.2]
-    assert result[1]["embedding"] == [0.3, 0.4]
+    assert result[0]["embedding"] == pytest.approx(_normalize([0.1, 0.2]))
+    assert result[1]["embedding"] == pytest.approx(_normalize([0.3, 0.4]))
+    assert math.isclose(math.sqrt(sum(x * x for x in result[0]["embedding"])), 1.0)
 
 
 async def test_embed_chunks_retries_after_429_then_succeeds(
@@ -51,8 +53,18 @@ async def test_embed_chunks_retries_after_429_then_succeeds(
 
     result = await embed_chunks([{"text": "a"}])
 
-    assert result[0]["embedding"] == [0.1, 0.2]
+    assert result[0]["embedding"] == pytest.approx(_normalize([0.1, 0.2]))
     assert mock_client.aio.models.embed_content.await_count == 2
+
+
+def test_normalize_scales_to_unit_length() -> None:
+    result = _normalize([3.0, 4.0])
+
+    assert result == pytest.approx([0.6, 0.8])
+
+
+def test_normalize_leaves_zero_vector_unchanged() -> None:
+    assert _normalize([0.0, 0.0]) == [0.0, 0.0]
 
 
 def test_retry_delay_seconds_parses_retry_info() -> None:

@@ -28,3 +28,43 @@ Chroma's SQLite backend auto-builds an unused full-text-search index (~256MB) ov
 - Any future embedding change (provider or dimension) continues to require a full re-embed.
 - If 768 dims measurably regresses retrieval quality, next step is 1536, not an outright revert to 3072.
 - The FTS index (~256MB) remains as unused overhead; removing it is out of scope here.
+
+## Results (rollout, 2026-07-31)
+
+Truncated output at `output_dimensionality=768` is **not pre-normalized** by the
+API — measured directly against the live endpoint, 3072-dim output is unit-norm
+(1.00000) while 768-dim output has per-text-varying norm (~0.586–0.589 observed).
+Since the Chroma collection ranks by `hnsw:space=l2`, unnormalized truncated
+vectors would make L2 distance diverge from cosine similarity, confounding any
+precision@5 change with a magnitude artifact rather than dimensionality itself.
+`_embed_batch` in `app/core/embeddings.py` now L2-normalizes every embedding
+after truncation (`_normalize`), verified in the rebuilt store: all sampled
+768-dim vectors have norm 1.0.
+
+**Retrieval quality** (`scripts/evaluate_retrieval.py`, same 14 questions/labels
+from the 3072 baseline — relevance judgments are dimension-independent):
+
+| | precision@5 |
+|---|---|
+| 3072 dims (baseline, commit `97b62ae`) | 0.67 |
+| 768 dims (post-rollout, normalized) | 0.70 |
+
+No regression — retrieval quality holds within noise of the small eval set, so
+the rollout gate is satisfied. 13 chunks retrieved at 768 dims were not seen at
+3072 dims and have no label yet; the harness scaffolded them as `null` in
+`scripts/eval_questions.json` (excluded from the precision@5 above, per the
+harness's design) and they should be hand-labeled in a follow-up pass.
+
+**Size** (539 records, full re-embed):
+
+| | 3072 dims | 768 dims | reduction |
+|---|---|---|---|
+| `data/chroma` total | 1.5GB | 742MB | 51.7% |
+| HNSW index (`data_level0.bin`) | 1.03GB | 272MB | 73.6% |
+
+Matches this ADR's projections (~750MB total, ~260MB index) closely. Chunk count
+moved from 87,298 to 86,003 for the same 539 records (~1.5% fewer) — attributed to
+run-to-run non-determinism in PDF text extraction, not the dimensionality change.
+
+**Status:** was already `Accepted` at authoring time (commit `97b62ae`); this
+section records the outcome of the gated rollout, no status transition needed.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import time
 from collections import deque
 from typing import Any, cast
@@ -14,6 +15,12 @@ from google.genai import errors, types
 from app.core.config import settings
 
 EMBEDDING_MODEL = "gemini-embedding-001"
+# ADR 0006: truncate via MRL to shrink data/chroma's HNSW index 4x. Google only
+# guarantees pre-normalized (unit-length) output at the model's native 3072
+# dims; any other output_dimensionality returns a raw truncated prefix with
+# per-text-varying magnitude, so it must be re-normalized below to keep the
+# vector store's L2 distance equivalent to cosine similarity.
+EMBEDDING_DIMENSIONALITY = 768
 BATCH_SIZE = 100  # API max per call
 _MAX_RETRIES = 5
 
@@ -73,11 +80,12 @@ async def embed_chunks(chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 async def _embed_batch(client: genai.Client, texts: list[str]) -> list[list[float]]:
+    config = types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIMENSIONALITY)
     for attempt in range(_MAX_RETRIES):
         await _rate_limiter.acquire()
         try:
             response = await client.aio.models.embed_content(
-                model=EMBEDDING_MODEL, contents=cast(Any, texts)
+                model=EMBEDDING_MODEL, contents=cast(Any, texts), config=config
             )
         except errors.ClientError as exc:
             if exc.code == 429 and attempt < _MAX_RETRIES - 1:
@@ -86,9 +94,17 @@ async def _embed_batch(client: genai.Client, texts: list[str]) -> list[list[floa
                 await asyncio.sleep(delay)
                 continue
             raise
-        return [list(embedding.values or []) for embedding in response.embeddings or []]
+        return [_normalize(list(embedding.values or [])) for embedding in response.embeddings or []]
 
     raise RuntimeError("Exceeded retry budget for embedding batch")
+
+
+def _normalize(vector: list[float]) -> list[float]:
+    """L2-normalize a truncated embedding back to unit length (see ADR 0006)."""
+    norm = math.sqrt(sum(x * x for x in vector))
+    if norm == 0:
+        return vector
+    return [x / norm for x in vector]
 
 
 def _retry_delay_seconds(exc: errors.ClientError) -> float | None:
