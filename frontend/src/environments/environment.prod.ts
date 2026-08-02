@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
-  // Set this to the deployed backend URL at deploy time.
-  apiBaseUrl: 'https://api.example.com',
+  // Relative + same-origin: nginx (frontend/nginx.conf) proxies /api/* to the
+  // backend service, so no CORS is needed in production.
+  apiBaseUrl: '/api',
 };
