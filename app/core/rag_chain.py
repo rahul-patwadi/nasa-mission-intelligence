@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from google import genai
@@ -9,10 +10,13 @@ from google.genai import types
 
 from app.core.config import settings
 from app.core.embeddings import embed_chunks
+from app.core.reranker import rerank
 from app.core.vectorstore import query as vectorstore_query
 
 GENERATION_MODEL = "gemini-flash-latest"
-TOP_K = 5
+# ADR 0007: over-retrieve by vector similarity, then re-rank with a cross-encoder.
+RETRIEVE_TOP_K = 20
+RERANK_TOP_N = 5
 NO_INFO_ANSWER = "I don't have information on that."
 
 # genai.Client has no timeout by default, so a stalled connection can hang
@@ -31,12 +35,15 @@ _SYSTEM_PROMPT = (
 async def answer_query(question: str, mission_filter: str | None = None) -> dict[str, Any]:
     """Embed the question, retrieve context chunks, and generate a grounded answer."""
     [embedded_question] = await embed_chunks([{"text": question}])
-    chunks = vectorstore_query(
-        embedded_question["embedding"], mission_filter=mission_filter, top_k=TOP_K
+    candidates = vectorstore_query(
+        embedded_question["embedding"], mission_filter=mission_filter, top_k=RETRIEVE_TOP_K
     )
 
-    if not chunks:
+    if not candidates:
         return {"answer": NO_INFO_ANSWER, "sources": []}
+
+    # CrossEncoder.predict is synchronous and CPU-bound; keep it off the event loop.
+    chunks = await asyncio.to_thread(rerank, question, candidates, RERANK_TOP_N)
 
     context = "\n\n".join(
         f"[source {i}] (mission: {chunk['mission']}, record: {chunk['record_id']})\n{chunk['text']}"
