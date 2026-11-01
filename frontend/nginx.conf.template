@@ -1,0 +1,37 @@
+# Rendered at container start by the nginx image's envsubst step
+# (/etc/nginx/templates). Only the variables below are substituted; nginx's
+# own $variables are left untouched. Defaults (see frontend/Dockerfile)
+# target docker-compose; Cloud Run overrides them via service env vars.
+
+# Backend addresses can change (Cloud Run has no fixed IP), so resolve at
+# request time rather than once at startup: proxy_pass with a variable does this.
+resolver ${DNS_RESOLVER} valid=300s;
+resolver_timeout 5s;
+
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    set $backend_url ${BACKEND_URL};
+    set $backend_host ${BACKEND_HOST};
+
+    # Strip the /api prefix so the backend's routes stay bare (/query,
+    # /missions, /health) regardless of the public path scheme.
+    location /api/ {
+        rewrite ^/api/(.*)$ /$1 break;
+        proxy_pass $backend_url;
+        proxy_ssl_server_name on;
+        proxy_ssl_name $backend_host;
+        proxy_set_header Host $backend_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
