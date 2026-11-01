@@ -32,18 +32,29 @@ _SYSTEM_PROMPT = (
 )
 
 
-async def answer_query(question: str, mission_filter: str | None = None) -> dict[str, Any]:
-    """Embed the question, retrieve context chunks, and generate a grounded answer."""
+async def retrieve_chunks(question: str, mission_filter: str | None = None) -> list[dict[str, Any]]:
+    """Embed the question, retrieve candidates, and re-rank them to the final context chunks.
+
+    Shared by answer_query and scripts/evaluate_retrieval.py so evals measure the real path.
+    """
     [embedded_question] = await embed_chunks([{"text": question}])
     candidates = vectorstore_query(
         embedded_question["embedding"], mission_filter=mission_filter, top_k=RETRIEVE_TOP_K
     )
 
     if not candidates:
-        return {"answer": NO_INFO_ANSWER, "sources": []}
+        return []
 
     # CrossEncoder.predict is synchronous and CPU-bound; keep it off the event loop.
-    chunks = await asyncio.to_thread(rerank, question, candidates, RERANK_TOP_N)
+    return await asyncio.to_thread(rerank, question, candidates, RERANK_TOP_N)
+
+
+async def answer_query(question: str, mission_filter: str | None = None) -> dict[str, Any]:
+    """Retrieve re-ranked context chunks for the question and generate a grounded answer."""
+    chunks = await retrieve_chunks(question, mission_filter)
+
+    if not chunks:
+        return {"answer": NO_INFO_ANSWER, "sources": []}
 
     context = "\n\n".join(
         f"[source {i}] (mission: {chunk['mission']}, record: {chunk['record_id']})\n{chunk['text']}"

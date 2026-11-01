@@ -1,8 +1,8 @@
 """Retrieval-quality evaluation harness: two-layer, human-labeled precision@5.
 
 Layer 1: for each eval question in scripts/eval_questions.json, run retrieval
-through the existing query path (embed_chunks + vectorstore.query) and print
-the top-K chunks (snippet, record_id, mission) as a readable report.
+through the real query path (rag_chain.retrieve_chunks: retrieve top-20,
+cross-encoder re-rank to top-5; ADR 0007) and print the top-K chunks (snippet, record_id, mission) as a readable report.
 
 Layer 2: relevance labels are persisted per question in
 scripts/eval_questions.json, keyed by Chroma's own chunk id
@@ -32,10 +32,9 @@ import logging
 from pathlib import Path
 from typing import Any, cast
 
-from app.core.embeddings import embed_chunks
-from app.core.vectorstore import query as vectorstore_query
+from app.core.rag_chain import RERANK_TOP_N, retrieve_chunks
 
-TOP_K = 5
+TOP_K = RERANK_TOP_N
 QUESTIONS_PATH = Path(__file__).parent / "eval_questions.json"
 
 logger = logging.getLogger(__name__)
@@ -62,12 +61,7 @@ def _approx_relevant(chunk: dict[str, Any], question: dict[str, Any]) -> bool:
 
 
 async def _run_question(question: dict[str, Any]) -> dict[str, Any]:
-    [embedded] = await embed_chunks([{"text": question["question"]}])
-    chunks = vectorstore_query(
-        embedded["embedding"],
-        mission_filter=question.get("mission_filter"),
-        top_k=TOP_K,
-    )
+    chunks = await retrieve_chunks(question["question"], question.get("mission_filter"))
 
     labels = question.setdefault("labels", {})
     rows = []
