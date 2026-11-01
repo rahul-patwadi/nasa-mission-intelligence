@@ -13,6 +13,13 @@ interface ChatMessage {
 
 const ALL_MISSIONS_OPTION = 'All';
 
+const SUGGESTIONS: readonly string[] = [
+  'What were the main goals of the Apollo program?',
+  'How does the ISS handle life support?',
+  'What did Voyager discover about the outer planets?',
+  'What challenges does Artemis face for lunar landings?',
+];
+
 @Component({
   selector: 'app-root',
   imports: [CommonModule, FormsModule],
@@ -22,6 +29,9 @@ const ALL_MISSIONS_OPTION = 'All';
 export class App implements OnInit {
   private readonly messageList = viewChild<ElementRef<HTMLDivElement>>('messageList');
 
+  private readonly composerInput = viewChild<ElementRef<HTMLTextAreaElement>>('composerInput');
+
+  readonly suggestions = SUGGESTIONS;
   readonly missionOptions = signal<string[]>([ALL_MISSIONS_OPTION]);
   readonly selectedMission = signal<string>(ALL_MISSIONS_OPTION);
   readonly messages = signal<ChatMessage[]>([]);
@@ -50,6 +60,7 @@ export class App implements OnInit {
 
     this.messages.update((messages) => [...messages, { role: 'user', text: question }]);
     this.questionInput.set('');
+    this.resetComposerHeight();
     this.error.set(null);
     this.loading.set(true);
     this.scrollToBottom();
@@ -72,10 +83,28 @@ export class App implements OnInit {
     });
   }
 
+  useSuggestion(suggestion: string): void {
+    this.questionInput.set(suggestion);
+    this.send();
+  }
+
+  autoGrow(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }
+
   onInputKeydown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.send();
+    }
+  }
+
+  private resetComposerHeight(): void {
+    const textarea = this.composerInput()?.nativeElement;
+    if (textarea) {
+      textarea.style.height = 'auto';
     }
   }
 

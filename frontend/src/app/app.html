@@ -1,9 +1,19 @@
 <div class="page">
   <header class="header">
-    <h1>NASA Mission Intelligence</h1>
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <ellipse cx="12" cy="12" rx="9.5" ry="3.8" fill="none" stroke="currentColor" stroke-width="1.6" transform="rotate(-25 12 12)" />
+        <circle cx="12" cy="12" r="2.2" fill="currentColor" />
+      </svg>
+      <div>
+        <h1>NASA Mission Intelligence</h1>
+        <p class="subtitle">Ask questions across NASA technical reports</p>
+      </div>
+    </div>
     <label class="mission-filter">
-      Mission
-      <select [(ngModel)]="selectedMission" name="mission">
+      <span class="mission-filter-label">Mission</span>
+      <select [(ngModel)]="selectedMission" name="mission" aria-label="Filter by mission">
         @for (mission of missionOptions(); track mission) {
           <option [value]="mission">{{ mission }}</option>
         }
@@ -11,13 +21,22 @@
     </label>
   </header>
 
-  <main class="message-list" #messageList>
+  <main class="message-list" #messageList aria-live="polite">
     @if (messages().length === 0) {
-      <p class="empty-state">Ask a question about NASA mission reports to get started.</p>
+      <section class="welcome">
+        <h2>What would you like to know?</h2>
+        <p>Answers are grounded in NASA technical reports, with sources cited.</p>
+        <div class="suggestions">
+          @for (suggestion of suggestions; track suggestion) {
+            <button class="suggestion" type="button" (click)="useSuggestion(suggestion)">{{ suggestion }}</button>
+          }
+        </div>
+      </section>
     }
 
     @for (message of messages(); track $index) {
-      <div class="bubble-row" [class.bubble-row--user]="message.role === 'user'">
+      <div class="message" [class.message--user]="message.role === 'user'">
+        <div class="avatar" aria-hidden="true">{{ message.role === 'user' ? 'You' : 'AI' }}</div>
         <div class="bubble" [class.bubble--user]="message.role === 'user'" [class.bubble--assistant]="message.role === 'assistant'">
           <p class="bubble-text">{{ message.text }}</p>
 
@@ -26,7 +45,7 @@
               <span class="sources-label">Sources</span>
               <ul class="sources-list">
                 @for (source of message.sources; track source.record_id + '-' + source.chunk_index) {
-                  <li>#{{ source.record_id }} &middot; {{ source.mission }}</li>
+                  <li class="source-chip">#{{ source.record_id }} &middot; {{ source.mission }}</li>
                 }
               </ul>
             </div>
@@ -36,8 +55,9 @@
     }
 
     @if (loading()) {
-      <div class="bubble-row">
-        <div class="bubble bubble--assistant bubble--loading">
+      <div class="message">
+        <div class="avatar" aria-hidden="true">AI</div>
+        <div class="bubble bubble--assistant bubble--loading" role="status" aria-label="Generating answer">
           <span class="loading-dot"></span>
           <span class="loading-dot"></span>
           <span class="loading-dot"></span>
@@ -46,21 +66,35 @@
     }
 
     @if (error()) {
-      <div class="error-banner">{{ error() }}</div>
+      <div class="error-banner" role="alert">{{ error() }}</div>
     }
   </main>
 
   <footer class="composer">
-    <textarea
-      class="composer-input"
-      placeholder="Ask about a NASA mission..."
-      [(ngModel)]="questionInput"
-      name="question"
-      rows="1"
-      (keydown)="onInputKeydown($event)"
-    ></textarea>
-    <button class="send-button" type="button" (click)="send()" [disabled]="loading() || !questionInput().trim()">
-      Send
-    </button>
+    <div class="composer-box">
+      <textarea
+        #composerInput
+        class="composer-input"
+        placeholder="Ask about a NASA mission..."
+        aria-label="Your question"
+        [(ngModel)]="questionInput"
+        name="question"
+        rows="1"
+        (input)="autoGrow($event)"
+        (keydown)="onInputKeydown($event)"
+      ></textarea>
+      <button
+        class="send-button"
+        type="button"
+        aria-label="Send question"
+        (click)="send()"
+        [disabled]="loading() || !questionInput().trim()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </div>
+    <p class="composer-hint">Enter to send &middot; Shift+Enter for a new line</p>
   </footer>
 </div>
